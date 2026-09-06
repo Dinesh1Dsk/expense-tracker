@@ -1,0 +1,40 @@
+{
+  "name": "@expense-tracker/api",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node dist/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/db/seed.ts",
+    "smoke": "tsx src/scripts/smoke.ts"
+  },
+  "dependencies": {
+    "@expense-tracker/types": "workspace:*",
+    "@expense-tracker/validators": "workspace:*",
+    "hono": "^4.4.0",
+    "@hono/node-server": "^1.12.0",
+    "@hono/zod-validator": "^0.2.2",
+    "drizzle-orm": "^0.32.0",
+    "dotenv": "^16.6.1",
+    "postgres": "^3.4.4",
+    "zod": "^3.23.0",
+    "jose": "^5.6.3",
+    "bcryptjs": "^2.4.3",
+    "date-fns": "^3.6.0",
+    "node-cron": "^3.0.3",
+    "nanoid": "^5.0.7"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.23.0",
+    "tsx": "^4.16.2",
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node-cron": "^3.0.11",
+    "vitest": "^2.1.9"
+  }
+}

@@ -1,0 +1,54 @@
+# Expense Tracker — Cursor Project Rules
+
+## Project
+
+Personal + family finance tracker using React Native (Expo), Hono API, PostgreSQL, and Turborepo.
+
+## Critical Rules
+
+- Store money as integer paise only.
+- Never update/delete transactions; use reversal entries.
+- Never store computed balances in DB.
+- API local imports must include `.js`.
+- Keep Zod schemas in `packages/validators`, not inline in routers.
+
+## API
+
+- Non-auth routes require `authMiddleware`.
+- Read user id using `c.get('userId')`.
+- Error response shape is `{ error: string }`.
+- Base route prefix is `/api/v1`.
+
+## Mobile
+
+- Use Expo Router screen structure.
+- Use Zustand stores in `src/stores`.
+- Use `apiRequest<T>()` for API calls.
+- Always display money via `formatINR(paise)`.
+
+## Balance
+
+- Recalculate from ledger utilities, do not persist computed values.
+- Available balance subtracts pending upcoming payments.
+
+## Order for new modules
+
+1. accounts
+2. categories
+3. transactions
+4. budget
+5. salary
+6. upcoming-payments
+7. family
+8. reports
+9. goals
+10. notifications
+
+## Runtime setup notes
+
+- Use `pnpm` for install and scripts.
+- For Expo Go on a real device, set `apps/mobile/.env`:
+  - `EXPO_PUBLIC_API_URL=http://<your-mac-lan-ip>:3000/api/v1`
+- After schema updates run:
+  - `pnpm run db:generate`
+  - `pnpm run db:migrate`

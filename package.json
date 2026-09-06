@@ -1,0 +1,32 @@
+{
+  "name": "expense-tracker",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "pnpm --filter @expense-tracker/api dev",
+    "dev:mobile": "pnpm --filter @expense-tracker/mobile dev -- --clear",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "type-check": "turbo run type-check",
+    "db:generate": "turbo run db:generate --filter=@expense-tracker/api",
+    "db:migrate": "turbo run db:migrate --filter=@expense-tracker/api",
+    "db:studio": "turbo run db:studio --filter=@expense-tracker/api",
+    "db:seed": "turbo run db:seed --filter=@expense-tracker/api",
+    "smoke": "turbo run smoke --filter=@expense-tracker/api"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@10.0.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
