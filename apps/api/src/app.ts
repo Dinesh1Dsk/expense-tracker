@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { corsAllowlist, env } from './env.js'
 import { authRouter } from './modules/auth/auth.router.js'
 import { accountsRouter } from './modules/accounts/accounts.router.js'
 import { transactionsRouter } from './modules/transactions/transactions.router.js'
@@ -15,7 +16,32 @@ import { categoriesRouter } from './modules/categories/categories.router.js'
 export const app = new Hono()
 
 app.use('*', logger())
-app.use('*', cors())
+app.use(
+  '*',
+  cors({
+    origin: (origin) => {
+      const allowed = corsAllowlist()
+
+      if (env.NODE_ENV !== 'production') {
+        return origin || '*'
+      }
+
+      if (allowed.includes('*')) {
+        return origin || '*'
+      }
+
+      // Expo / React Native typically send no Origin; CORS is browser-only.
+      if (!origin) {
+        return '*'
+      }
+
+      return allowed.includes(origin) ? origin : ''
+    },
+    allowHeaders: ['Authorization', 'Content-Type'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    maxAge: 86400,
+  })
+)
 
 app.get('/health', (c) => c.json({ status: 'ok', ts: new Date().toISOString() }))
 

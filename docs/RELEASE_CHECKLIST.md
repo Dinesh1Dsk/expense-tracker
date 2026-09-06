@@ -24,9 +24,12 @@
 - [ ] Goals create/update progress
 
 ## Deployment
-- [ ] Migrations applied on production DB
-- [ ] Seed script run if required
-- [ ] API health endpoint validated
+- [ ] Render API + Postgres created (see [RENDER.md](RENDER.md))
+- [ ] Production env set: `NODE_ENV`, internal `DATABASE_URL`, strong `JWT_SECRET`
+- [ ] Migrations applied on production DB (Blueprint pre-deploy does this)
+- [ ] Seed script run if required (idempotent; pre-deploy also runs it)
+- [ ] API health endpoint validated (`GET /health`)
+- [ ] Mobile `EXPO_PUBLIC_API_URL=https://<service>.onrender.com/api/v1`
 - [ ] Mobile build generated and smoke-tested
 
 ## Post-release

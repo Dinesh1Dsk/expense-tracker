@@ -29,27 +29,37 @@ async function seedSystemCategories() {
     where: eq(categories.isSystem, true),
   })
 
-  const existingNames = new Set(existing.map((item) => item.name.toLowerCase()))
-  const missing = SYSTEM_CATEGORIES.filter(
-    (item) => !existingNames.has(item.name.toLowerCase())
-  )
+  const existingByName = new Map(existing.map((item) => [item.name.toLowerCase(), item]))
+  const missing = SYSTEM_CATEGORIES.filter((item) => !existingByName.has(item.name.toLowerCase()))
+  const mistyped = SYSTEM_CATEGORIES.filter((item) => {
+    const row = existingByName.get(item.name.toLowerCase())
+    return !!row && row.type !== item.type
+  })
 
-  if (missing.length === 0) {
+  if (missing.length === 0 && mistyped.length === 0) {
     console.log('System categories already seeded.')
     return
   }
 
-  await db.insert(categories).values(
-    missing.map((item) => ({
-      name: item.name,
-      icon: item.icon,
-      type: item.type,
-      color: '#1D9E75',
-      isSystem: true,
-    }))
-  )
+  if (missing.length > 0) {
+    await db.insert(categories).values(
+      missing.map((item) => ({
+        name: item.name,
+        icon: item.icon,
+        type: item.type,
+        color: '#1D9E75',
+        isSystem: true,
+      }))
+    )
+    console.log(`Seeded ${missing.length} system categories.`)
+  }
 
-  console.log(`Seeded ${missing.length} system categories.`)
+  for (const item of mistyped) {
+    const row = existingByName.get(item.name.toLowerCase())
+    if (!row) continue
+    await db.update(categories).set({ type: item.type }).where(eq(categories.id, row.id))
+    console.log(`Corrected system category type: ${item.name} ${row.type} -> ${item.type}`)
+  }
 }
 
 seedSystemCategories()

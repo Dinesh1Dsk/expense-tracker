@@ -1,0 +1,48 @@
+# Expense Tracker API — Render Blueprint
+# Dashboard: New → Blueprint → connect this repo.
+# Region is fixed after first create; change before you apply if needed.
+databases:
+  - name: expense-tracker-db
+    plan: basic-256mb
+    region: singapore
+    databaseName: expense_tracker
+    user: expense_tracker
+    postgresMajorVersion: "16"
+    ipAllowList: [] # Private network only. The API uses Render's internal DATABASE_URL.
+
+services:
+  - type: web
+    name: expense-tracker-api
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    # Seed is idempotent (inserts missing system categories only).
+    preDeployCommand: pnpm --filter @expense-tracker/api db:migrate && pnpm --filter @expense-tracker/api db:seed
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/types/**
+        - packages/validators/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - render.yaml
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: DATABASE_URL
+        fromDatabase:
+          name: expense-tracker-db
+          property: connectionString
+      # Render generates a 256-bit secret. Rotate in the dashboard if needed.
+      - key: JWT_SECRET
+        generateValue: true
+      # Optional browser allowlist (comma-separated). Native mobile does not need this.
+      - key: CORS_ORIGIN
+        value: ""

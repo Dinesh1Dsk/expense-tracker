@@ -44,3 +44,8 @@ pnpm run lint
 - If Expo Go cannot hit API: ensure phone + laptop are on same Wi-Fi and mobile env uses LAN IP, not localhost.
 - If DB errors show missing database: create DB first and rerun migrations.
 - If Metro shows stale module/runtime errors: stop dev server and restart with `--clear`.
+
+## Production (Render)
+
+Deploy steps, env vars, health check, and mobile `EXPO_PUBLIC_API_URL` are in [docs/RENDER.md](docs/RENDER.md).
+Do not reuse the local Docker Postgres (or any other app’s DB) for production.
