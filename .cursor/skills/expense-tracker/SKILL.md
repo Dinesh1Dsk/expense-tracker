@@ -16,13 +16,12 @@ Use this skill before implementing features in this repository.
 
 ## Setup
 
+V1 mobile is offline-only. No API or database is required.
+
 ```bash
 pnpm install
-cp apps/api/.env.example apps/api/.env
 pnpm run dev
 ```
-
-Fill `DATABASE_URL` and `JWT_SECRET` in `apps/api/.env`.
 
 ## Non-negotiable Rules
 
@@ -30,8 +29,8 @@ Fill `DATABASE_URL` and `JWT_SECRET` in `apps/api/.env`.
 2. Transactions are append-only. Never update or delete transaction rows.
 3. Balance is recalculated from ledger. Do not persist computed balance.
 4. Available balance = current balance - pending upcoming payments.
-5. API returns paise values; mobile formats for INR display.
-6. API local imports must use `.js` extension (NodeNext).
+5. Mobile formats paise for INR display via `formatINR`.
+6. API local imports must use `.js` extension (NodeNext) if the API is touched later.
 7. Validation schemas belong in `packages/validators`, not inline in routers.
 
 ## API Conventions
@@ -58,11 +57,10 @@ Implement in this order when bootstrapping:
 
 ## Cursor Workflow
 
-1. Implement backend module first.
-2. Add/update validators and exports.
-3. Add mobile store and API integration.
-4. Add/update screen.
-5. Run required checks.
+1. For v1, implement in `apps/mobile/src/offline` then stores/screens.
+2. Keep money in paise and transactions append-only.
+3. Do not add API calls for v1 features.
+4. Run mobile tests / type-check.
 
 ## Troubleshooting Quick Fixes
 

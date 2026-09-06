@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { apiRequest } from '../api/client'
+import { deleteBudget, listBudgets, listCategories, saveBudget, budgetSummary } from '../offline/repo'
 
 export interface BudgetItem {
   id: string
@@ -69,37 +69,32 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   isLoading: false,
   error: null,
   setMonth: (month) => set({ month }),
-  setScope: (isFamily) => set({ isFamily }),
+  setScope: () => set({ isFamily: false }),
 
   fetchMeta: async () => {
     try {
-      const data = await apiRequest<{ categories: BudgetCategory[] }>('/budgets/meta')
-      set({ categories: data.categories })
+      const categories = await listCategories()
+      set({
+        categories: categories.map((item) => ({
+          id: item.id,
+          name: item.name,
+          icon: item.icon,
+          isSystem: item.isSystem,
+        })),
+      })
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to load budget metadata.' })
     }
   },
   fetchFamilyAccess: async () => {
-    try {
-      const data = await apiRequest<{
-        inFamily: boolean
-        role: 'owner' | 'member' | null
-        canManageBudget: boolean
-      }>('/family/me')
-      set({
-        canManageFamilyBudget: data.inFamily ? data.canManageBudget : false,
-        familyRole: data.inFamily ? data.role : null,
-      })
-    } catch {
-      set({ canManageFamilyBudget: false, familyRole: null })
-    }
+    set({ canManageFamilyBudget: false, familyRole: null, isFamily: false })
   },
 
   fetchBudgets: async () => {
-    const { month, isFamily } = get()
+    const { month } = get()
     set({ isLoading: true, error: null })
     try {
-      const items = await apiRequest<BudgetItem[]>(`/budgets?month=${month}&isFamily=${isFamily}`)
+      const items = await listBudgets(month)
       set({ items, isLoading: false })
     } catch (error) {
       set({
@@ -109,16 +104,9 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     }
   },
   fetchSummary: async () => {
-    const { month, isFamily } = get()
+    const { month } = get()
     try {
-      const summary = await apiRequest<{
-        hasOverallBudget: boolean
-        month: string
-        monthlyLimit?: number
-        spent?: number
-        percentUsed?: number
-        status?: 'on_track' | 'warning' | 'exceeded'
-      }>(`/budgets/summary?month=${month}&isFamily=${isFamily}`)
+      const summary = await budgetSummary(month)
       set({ summary })
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to load budget summary.' })
@@ -126,24 +114,13 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
   },
 
   saveBudget: async (input) => {
-    const { isFamily, canManageFamilyBudget } = get()
-    if (isFamily && !canManageFamilyBudget) {
-      throw new Error('Only family owner can manage family budget')
-    }
-    await apiRequest('/budgets', {
-      method: 'POST',
-      body: JSON.stringify({ ...input, isFamily }),
-    })
+    await saveBudget(input)
     await get().fetchBudgets()
     await get().fetchSummary()
   },
 
   deleteBudget: async (id) => {
-    const { isFamily, canManageFamilyBudget } = get()
-    if (isFamily && !canManageFamilyBudget) {
-      throw new Error('Only family owner can manage family budget')
-    }
-    await apiRequest(`/budgets/${id}`, { method: 'DELETE' })
+    await deleteBudget(id)
     await get().fetchBudgets()
     await get().fetchSummary()
   },

@@ -4,11 +4,31 @@
     "slug": "expense-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "scheme": "expense-tracker",
+    "userInterfaceStyle": "dark",
     "platforms": [
       "ios",
       "android"
     ],
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "bundleIdentifier": "com.dineshkumar.expensetracker",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.dineshkumar.expensetracker",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundImage": "./assets/adaptive-icon-background.png",
+        "backgroundColor": "#000000"
+      }
+    },
     "plugins": [
       "expo-router",
       "expo-secure-store",

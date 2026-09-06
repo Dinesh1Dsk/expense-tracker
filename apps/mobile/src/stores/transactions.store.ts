@@ -1,5 +1,15 @@
 import { create } from 'zustand'
-import { apiRequest } from '../api/client'
+import {
+  createCategory,
+  createTransaction,
+  deleteCategory,
+  getTransaction,
+  listTransactions,
+  recentCategories,
+  reverseTransaction,
+  transactionMeta,
+  updateCategory,
+} from '../offline/repo'
 
 export interface TransactionItem {
   id: string
@@ -16,6 +26,11 @@ export interface TransactionItem {
   runningBalance: number
   category: { id: string; name: string; icon: string | null; color: string | null }
   account: { id: string; name: string; type: string }
+}
+
+export interface TransactionDetail extends TransactionItem {
+  isReversed: boolean
+  reversalId: string | null
 }
 
 export interface TransactionMeta {
@@ -64,6 +79,7 @@ interface TransactionsState {
   error: string | null
   fetchMeta: () => Promise<void>
   fetchTransactions: (reset?: boolean) => Promise<void>
+  fetchTransaction: (id: string) => Promise<TransactionDetail>
   setFilter: (
     key: 'month' | 'accountId' | 'categoryId' | 'type' | 'search',
     value: string | null
@@ -106,11 +122,8 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
 
   fetchMeta: async () => {
     try {
-      const [meta, categories] = await Promise.all([
-        apiRequest<{ accounts: Array<{ id: string; name: string; type: string }> }>('/transactions/meta'),
-        apiRequest<TransactionCategory[]>('/categories'),
-      ])
-      set({ meta: { accounts: meta.accounts, categories } })
+      const meta = await transactionMeta()
+      set({ meta })
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to load transaction metadata.' })
     }
@@ -121,22 +134,10 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
     try {
       const { filters, items } = get()
       const targetPage = reset ? 1 : filters.page
-      const params = new URLSearchParams({
-        month: filters.month,
-        page: String(targetPage),
-        limit: String(filters.limit),
+      const response = await listTransactions({
+        ...filters,
+        page: targetPage,
       })
-      if (filters.accountId) params.set('accountId', filters.accountId)
-      if (filters.categoryId) params.set('categoryId', filters.categoryId)
-      if (filters.type) params.set('type', filters.type)
-      if (filters.search.trim()) params.set('search', filters.search.trim())
-
-      const response = await apiRequest<{
-        transactions: TransactionItem[]
-        summary: { totalIncome: number; totalExpense: number; savings: number }
-        pagination: { page: number; limit: number; total: number; hasMore: boolean }
-      }>(`/transactions?${params.toString()}`)
-
       set({
         items: reset ? response.transactions : [...items, ...response.transactions],
         summary: response.summary,
@@ -151,6 +152,7 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
       })
     }
   },
+  fetchTransaction: async (id) => getTransaction(id),
   setFilter: async (key, value) => {
     const prev = get().filters
     const next = {
@@ -186,38 +188,27 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
   },
 
   createTransaction: async (input) => {
-    await apiRequest('/transactions', { method: 'POST', body: JSON.stringify(input) })
+    await createTransaction(input)
     await get().fetchTransactions()
   },
 
   reverseTransaction: async (id) => {
-    await apiRequest(`/transactions/${id}/reverse`, { method: 'POST' })
+    await reverseTransaction(id)
     await get().fetchTransactions()
   },
 
   createCategory: async (input) => {
-    await apiRequest('/categories', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
+    await createCategory(input)
     await get().fetchMeta()
   },
   updateCategory: async (id, input) => {
-    await apiRequest(`/categories/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(input),
-    })
+    await updateCategory(id, input)
     await get().fetchMeta()
   },
   deleteCategory: async (id) => {
-    const result = await apiRequest<{ success: boolean; deletedSubcategories: number }>(
-      `/categories/${id}`,
-      { method: 'DELETE' }
-    )
+    const result = await deleteCategory(id)
     await get().fetchMeta()
-    return { deletedSubcategories: result.deletedSubcategories }
+    return result
   },
-  fetchRecentCategories: async () => {
-    return apiRequest<TransactionCategory[]>('/categories/recent')
-  },
+  fetchRecentCategories: async () => recentCategories(),
 }))

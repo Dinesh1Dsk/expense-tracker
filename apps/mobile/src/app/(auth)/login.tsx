@@ -5,29 +5,28 @@ import { useAuthStore } from '../../stores/auth.store'
 import { useAccountStore } from '../../stores/account.store'
 import { premiumTheme } from '../../theme/premium'
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+export default function WelcomeScreen() {
+  const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const login = useAuthStore((s) => s.login)
+  const startOffline = useAuthStore((s) => s.startOffline)
   const fetchAccounts = useAccountStore((s) => s.fetchAccounts)
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      setError('Email and password are required.')
+  const handleStart = async () => {
+    if (!name.trim()) {
+      setError('Enter your name to start.')
       return
     }
 
     try {
       setIsSubmitting(true)
       setError('')
-      await login(email.trim().toLowerCase(), password)
+      await startOffline(name.trim())
       await fetchAccounts()
       const hasAccounts = useAccountStore.getState().accounts.length > 0
       router.replace(hasAccounts ? '/(tabs)/' : '/onboarding/accounts')
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Login failed. Please try again.')
+      setError(e instanceof Error ? e.message : 'Could not start offline profile.')
     } finally {
       setIsSubmitting(false)
     }
@@ -35,17 +34,21 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.eyebrow}>EXPENSE TRACKER</Text>
-      <Text style={styles.title}>Welcome back</Text>
-      <Text style={styles.subtitle}>Sign in to continue with your finances.</Text>
+      <Text style={styles.eyebrow}>EXPENSE TRACKER · V1 OFFLINE</Text>
+      <Text style={styles.title}>Your money stays on this phone</Text>
+      <Text style={styles.subtitle}>
+        No login, no server. Accounts, transactions, and budgets are saved locally.
+      </Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" editable={!isSubmitting} />
-      <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry editable={!isSubmitting} />
-      <TouchableOpacity style={[styles.btn, isSubmitting && styles.btnDisabled]} onPress={handleLogin} disabled={isSubmitting}>
-        <Text style={styles.btnText}>{isSubmitting ? 'Logging in...' : 'Login'}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-        <Text style={styles.link}>Don't have an account? Register</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Your name"
+        value={name}
+        onChangeText={setName}
+        editable={!isSubmitting}
+      />
+      <TouchableOpacity style={[styles.btn, isSubmitting && styles.btnDisabled]} onPress={handleStart} disabled={isSubmitting}>
+        <Text style={styles.btnText}>{isSubmitting ? 'Starting...' : 'Get started'}</Text>
       </TouchableOpacity>
     </View>
   )
@@ -70,5 +73,4 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.7 },
   btnText: { color: premiumTheme.colors.accentText, fontWeight: '700', fontSize: 16 },
   error: { color: '#FF6666', marginBottom: 12 },
-  link: { textAlign: 'center', marginTop: 16, color: premiumTheme.colors.textMuted },
 })

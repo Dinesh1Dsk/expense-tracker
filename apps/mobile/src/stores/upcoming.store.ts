@@ -1,5 +1,12 @@
 import { create } from 'zustand'
-import { apiRequest } from '../api/client'
+import {
+  createUpcoming,
+  deleteUpcoming,
+  listUpcoming,
+  markUpcomingPaid,
+  skipUpcoming,
+  upcomingHomeSummary,
+} from '../offline/repo'
 
 export interface UpcomingPaymentItem {
   id: string
@@ -54,15 +61,7 @@ export const useUpcomingStore = create<UpcomingState>((set, get) => ({
   fetchUpcoming: async () => {
     set({ isLoading: true, error: null })
     try {
-      const data = await apiRequest<{
-        emis: UpcomingPaymentItem[]
-        recurring: UpcomingPaymentItem[]
-        onetime: UpcomingPaymentItem[]
-        paid: UpcomingPaymentItem[]
-        summary: { totalCommitted: number; pendingCount: number; overdueCount: number }
-      }>(
-        '/upcoming-payments'
-      )
+      const data = await listUpcoming()
       const items = [...data.emis, ...data.recurring, ...data.onetime, ...data.paid].sort(
         (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
       )
@@ -81,41 +80,30 @@ export const useUpcomingStore = create<UpcomingState>((set, get) => ({
     }
   },
   createPayment: async (input) => {
-    await apiRequest('/upcoming-payments', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
+    await createUpcoming(input)
     await get().fetchUpcoming()
     await get().fetchHomeSummary()
   },
   markPaid: async (id, accountId) => {
-    await apiRequest(`/upcoming-payments/${id}/mark-paid`, {
-      method: 'PATCH',
-      body: JSON.stringify(accountId ? { accountId } : {}),
-    })
+    await markUpcomingPaid(id, accountId)
     await get().fetchUpcoming()
     await get().fetchHomeSummary()
   },
   fetchHomeSummary: async () => {
     try {
-      const data = await apiRequest<{
-        topPayments: UpcomingPaymentItem[]
-        totalCount: number
-        totalCommitted: number
-        overdueCount: number
-      }>('/upcoming-payments/home-summary')
+      const data = await upcomingHomeSummary()
       set({ homeSummary: data })
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to load upcoming summary.' })
     }
   },
   skipPayment: async (id) => {
-    await apiRequest(`/upcoming-payments/${id}/skip`, { method: 'PATCH' })
+    await skipUpcoming(id)
     await get().fetchUpcoming()
     await get().fetchHomeSummary()
   },
   deletePayment: async (id) => {
-    await apiRequest(`/upcoming-payments/${id}`, { method: 'DELETE' })
+    await deleteUpcoming(id)
     await get().fetchUpcoming()
     await get().fetchHomeSummary()
   },

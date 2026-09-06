@@ -3,29 +3,24 @@
 ## Prerequisites
 - Node 20+
 - `pnpm` 10+
-- Docker running (for local PostgreSQL if using containerized DB)
+
+V1 mobile is **offline-only**. No API, Docker, or `EXPO_PUBLIC_API_URL` is required.
 
 ## First-time setup
 ```bash
 pnpm install
-cp apps/api/.env.example apps/api/.env
-cp apps/mobile/.env.example apps/mobile/.env
-```
-
-Set values:
-- `apps/api/.env`: `DATABASE_URL`, `JWT_SECRET`
-- `apps/mobile/.env`: `EXPO_PUBLIC_API_URL=http://<your-mac-lan-ip>:3000/api/v1`
-
-## Database setup
-```bash
-pnpm run db:generate
-pnpm run db:migrate
-pnpm run db:seed
 ```
 
 ## Start development
 ```bash
 pnpm run dev
+```
+
+Opens Expo. On first launch enter your name, then add accounts.
+
+The API package remains in the repo for a later sync backend:
+```bash
+pnpm run dev:api
 ```
 
 For Expo cache reset:
@@ -44,6 +39,10 @@ pnpm run lint
 - If Expo Go cannot hit API: ensure phone + laptop are on same Wi-Fi and mobile env uses LAN IP, not localhost.
 - If DB errors show missing database: create DB first and rerun migrations.
 - If Metro shows stale module/runtime errors: stop dev server and restart with `--clear`.
+
+## Production (Play Store)
+
+V1 ships as an offline Android App Bundle. EAS login, `eas init`, and `eas build -p android --profile production` are in [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
 
 ## Production (Render)
 

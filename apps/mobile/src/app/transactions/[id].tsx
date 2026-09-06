@@ -1,37 +1,24 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { apiRequest } from '../../api/client'
 import { premiumTheme } from '../../theme/premium'
 import { formatINR } from '../../utils/money'
-
-interface TransactionDetail {
-  id: string
-  amount: number
-  type: 'DEBIT' | 'CREDIT'
-  note: string | null
-  isReversal: boolean
-  isReversed: boolean
-  reversalId: string | null
-  referenceId: string | null
-  transactedAt: string
-  runningBalance: number
-  category: { name: string; icon: string | null; color: string | null }
-  account: { name: string; type: string }
-}
+import { type TransactionDetail, useTransactionsStore } from '../../stores/transactions.store'
 
 export default function TransactionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
+  const fetchTransaction = useTransactionsStore((s) => s.fetchTransaction)
+  const reverseTransaction = useTransactionsStore((s) => s.reverseTransaction)
   const [item, setItem] = useState<TransactionDetail | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
-    apiRequest<TransactionDetail>(`/transactions/${id}`)
+    fetchTransaction(id)
       .then(setItem)
       .finally(() => setLoading(false))
-  }, [id])
+  }, [fetchTransaction, id])
 
   const reverse = async () => {
     if (!item) return
@@ -41,7 +28,7 @@ export default function TransactionDetailScreen() {
         text: 'Yes, Reverse',
         style: 'destructive',
         onPress: async () => {
-          await apiRequest(`/transactions/${item.id}/reverse`, { method: 'POST' })
+          await reverseTransaction(item.id)
           router.back()
         },
       },

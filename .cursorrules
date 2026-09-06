@@ -23,7 +23,7 @@ Personal + family finance tracker using React Native (Expo), Hono API, PostgreSQ
 
 - Use Expo Router screen structure.
 - Use Zustand stores in `src/stores`.
-- Use `apiRequest<T>()` for API calls.
+- V1 is offline-only. Persist via `src/offline` (JSON on device). Do not call the API.
 - Always display money via `formatINR(paise)`.
 
 ## Balance
@@ -47,8 +47,5 @@ Personal + family finance tracker using React Native (Expo), Hono API, PostgreSQ
 ## Runtime setup notes
 
 - Use `pnpm` for install and scripts.
-- For Expo Go on a real device, set `apps/mobile/.env`:
-  - `EXPO_PUBLIC_API_URL=http://<your-mac-lan-ip>:3000/api/v1`
-- After schema updates run:
-  - `pnpm run db:generate`
-  - `pnpm run db:migrate`
+- V1: `pnpm run dev` starts mobile only. Data stays on device.
+- API scripts (`db:generate`, `db:migrate`) are for a later sync backend.

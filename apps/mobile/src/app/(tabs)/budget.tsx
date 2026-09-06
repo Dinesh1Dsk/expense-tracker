@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function BudgetScreen() {
   const insets = useSafeAreaInsets()
-  const { items, summary, categories, month, isFamily, canManageFamilyBudget, familyRole, isLoading, error, setMonth, setScope, fetchMeta, fetchFamilyAccess, fetchBudgets, fetchSummary, saveBudget, deleteBudget } =
+  const { items, summary, categories, month, isFamily, canManageFamilyBudget, isLoading, error, setMonth, fetchMeta, fetchFamilyAccess, fetchBudgets, fetchSummary, saveBudget, deleteBudget } =
     useBudgetStore()
   const [limit, setLimit] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -71,27 +71,7 @@ export default function BudgetScreen() {
     <View style={[styles.container, { paddingTop: Math.max(insets.top + 8, 24) }]}>
       <Text style={styles.eyebrow}>PLANNING</Text>
       <Text style={styles.title}>Budget</Text>
-      <View style={styles.scopeRow}>
-        <Pressable
-          style={[styles.scopeChip, !isFamily && styles.scopeChipActive]}
-          onPress={() => setScope(false)}
-        >
-          <Text style={[styles.scopeChipText, !isFamily && styles.scopeChipTextActive]}>Personal</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.scopeChip, isFamily && styles.scopeChipActive]}
-          onPress={() => setScope(true)}
-        >
-          <Text style={[styles.scopeChipText, isFamily && styles.scopeChipTextActive]}>Family</Text>
-        </Pressable>
-      </View>
-      {isFamily ? (
-        <View style={styles.roleBadge}>
-          <Text style={styles.roleBadgeText}>
-            {familyRole === 'owner' ? 'Family Role: Owner' : 'Family Role: Member (Read only)'}
-          </Text>
-        </View>
-      ) : null}
+      <Text style={styles.subtitle}>Personal budgets only in offline v1.</Text>
 
       {(!isFamily || canManageFamilyBudget) ? (
       <View style={styles.card}>
@@ -220,8 +200,9 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '700',
     letterSpacing: -0.5,
-    marginBottom: 16,
+    marginBottom: 8,
   },
+  subtitle: { color: premiumTheme.colors.textMuted, marginBottom: 16 },
   card: {
     backgroundColor: premiumTheme.colors.surface,
     borderWidth: 1,

@@ -1,5 +1,11 @@
 import { create } from 'zustand'
-import { apiRequest } from '../api/client'
+import {
+  createAccount,
+  deleteAccount,
+  listAccounts,
+  reorderAccounts,
+  updateAccount,
+} from '../offline/repo'
 
 export type AccountType = 'cash' | 'bank' | 'wallet' | 'credit_card' | 'savings' | 'loan'
 
@@ -54,7 +60,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
   fetchAccounts: async () => {
     set({ isLoading: true, error: null })
     try {
-      const accounts = await apiRequest<AccountWithBalance[]>('/accounts')
+      const accounts = await listAccounts()
       set({ accounts, isLoading: false })
     } catch (error) {
       set({
@@ -67,10 +73,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
   createAccount: async (input) => {
     set({ error: null })
     try {
-      await apiRequest<AccountWithBalance>('/accounts', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      })
+      await createAccount(input)
       await get().fetchAccounts()
     } catch (error) {
       set({
@@ -83,10 +86,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
   updateAccount: async (id, input) => {
     set({ error: null })
     try {
-      await apiRequest<AccountWithBalance>(`/accounts/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(input),
-      })
+      await updateAccount(id, input)
       await get().fetchAccounts()
     } catch (error) {
       set({
@@ -99,22 +99,9 @@ export const useAccountStore = create<AccountState>((set, get) => ({
   deleteAccount: async (id, options) => {
     set({ error: null })
     try {
-      const suffix = options?.forceCleanup ? '?forceCleanup=1' : ''
-      const result = await apiRequest<{
-        success: boolean
-        hadTransactions: boolean
-        transactionCount: number
-        cancelledUpcoming?: number
-      }>(
-        `/accounts/${id}${suffix}`,
-        { method: 'DELETE' }
-      )
+      const result = await deleteAccount(id, options)
       await get().fetchAccounts()
-      return {
-        hadTransactions: result.hadTransactions,
-        transactionCount: result.transactionCount,
-        cancelledUpcoming: result.cancelledUpcoming,
-      }
+      return result
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to delete account.',
@@ -126,10 +113,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
   reorderAccounts: async (orderedAccountIds) => {
     set({ error: null })
     try {
-      await apiRequest('/accounts/reorder', {
-        method: 'PATCH',
-        body: JSON.stringify({ orderedAccountIds }),
-      })
+      await reorderAccounts(orderedAccountIds)
       await get().fetchAccounts()
     } catch (error) {
       set({
